@@ -6,6 +6,8 @@ import discord
 from discord.ext import tasks, commands
 #from discord_webhook import DiscordWebhook
 
+isNSFW = True
+prefix = "<porn"
 
 fileJson = "infosPorn.json"
 infos = {}
@@ -67,40 +69,40 @@ def saveJson():
 
 @client.event
 async def on_message(message):
-    if message.content.find("<porn") == 0:
+    if message.content.find(prefix) == 0:
         if message.guild.id not in serverTime.keys():
             serverTime[message.guild.id] = 0
 
-        if message.content.find("<porn add") == 0:
+        if message.content.find(prefix+"add") == 0:
             if len(message.content[10:]) != 0:
-                infos["subreddits"].append(message.content[10:])
+                infos["subreddits"].append(message.content[len(prefix)+4:])
                 saveJson()
                 await message.add_reaction("✅")
             else:
                 await message.add_reaction("❌")
-        elif message.content.find("<porn remove") == 0:
+        elif message.content.find(prefix+"remove") == 0:
             try:
-                infos["subreddits"].remove(message.content[13:])
+                infos["subreddits"].remove(message.content[len(prefix)+7:])
                 saveJson()
                 await message.add_reaction("✅")
             except ValueError:
                 await message.add_reaction("❌")
-        if message.content.find("<porn ban") == 0:
+        if message.content.find(prefix+"ban") == 0:
             if len(message.content[10:]) != 0:
-                infos["banlist"].append(message.content[10:])
+                infos["banlist"].append(message.content[len(prefix)+4:])
                 saveJson()
                 await message.add_reaction("✅")
             else:
                 await message.add_reaction("❌")
-        elif message.content.find("<porn unban") == 0:
+        elif message.content.find(prefix+"unban") == 0:
             try:
-                infos["banlist"].remove(message.content[12:])
+                infos["banlist"].remove(message.content[len(prefix)+6:])
                 saveJson()
                 await message.add_reaction("✅")
             except ValueError:
                 await message.add_reaction("❌")  
 
-        elif not message.channel.is_nsfw():
+        elif not message.channel.is_nsfw() and isNSFW:
             await message.channel.send("You must be in a nsfw channel to use this command")
         elif time()-serverTime[message.guild.id] >= 5:
             post = postPorn()
