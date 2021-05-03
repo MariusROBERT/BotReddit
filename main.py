@@ -1,31 +1,23 @@
 import praw
 import json
 from random import choice
-from praw.reddit import Subreddit
-from time import sleep, time
+from time import time
 import discord
 from discord.ext import tasks, commands
 #from discord_webhook import DiscordWebhook
-#from datetime import datetime
 
 
-#--------------- DATA ---------------
-#bot
-#webhookLink = "https://discord.com/api/webhooks/838743675093385257/V1JDQLZMPH966g3mmBmlqHfJraSAjmsw0xZ6OWLnG7DPyPUs4FHHlrU7EL1L2wekeLid"
-#"""devoirs"""
-webhookLink = "https://discord.com/api/webhooks/838747699448512552/8Nl27cQCctRSbCRcHPpprJv7pr8ZYYpPqLrLTNAbQfu8kAiny3f_vrHztuuH_SN-98y2"
-
-#timer = 1800
-last_time=0
+fileJson = "infosPorn.json"
 infos = {}
-with open("infosPorn.json", "r") as f:
+serverTime = {}
+with open(fileJson, "r") as f:
     infos = json.load(f)
-#print(infos["subreddits"])
 
 
 #-------------- CLIENTS ---------------
 
 reddit = praw.Reddit(
+    check_for_async=False,
     client_id = infos["client_id"],
     client_secret = infos["client_secret"],
     user_agent = infos["user_agent"],
@@ -34,7 +26,6 @@ reddit = praw.Reddit(
 )
 reddit.read_only = True
 
-#client = commands.Bot(command_prefix="<")
 client = discord.Client()
 
 
@@ -50,38 +41,77 @@ def postPorn():
     while not done:
         tempSubreddit = choice(subreddits)
         post = tempSubreddit.random()
+        #listPosts = tempSubreddit.hot(limit=20)    #WIP
+        #post = choice(listPosts)                   #Serait cool mais marche pas
         if post == None:
-            print("erreur aucun post trouvé dans "+tempSubreddit.title)
+            print("erreur aucun post trouvé dans r/"+tempSubreddit.diaplay_name)
             done = False
-        elif "redgifs.com" in post.url:
-            print("redgif de merde fais chier")
+        elif any(site in post.url for site in infos["banlist"]):
+            print("site de merde")
             done = False
         elif post.is_original_content or not post.stickied:
-            print(post.title)
+            #print(post.title)
             print(post.shortlink)
-            print(post.url)
-            #webhook = DiscordWebhook(webhookLink, content = post.title+" from "+tempSubreddit.title+"\n"+post.url+" \nlink :<"+post.shortlink+">")
-            #webhook.execute()
+            #print(post.url)
             print()
-            return (post.title+" from "+tempSubreddit.title+"\n"+post.url+" \nlink :<"+post.shortlink+">")
+            return ([post.title,tempSubreddit.display_name,post.url,post.shortlink])
         else:
             print("pas original")
             done = False
 
+def saveJson():
+    with open(fileJson, "w") as f:
+        json.dump(infos, f)
 
 #--------------- DISCORD EVENTS ---------------
 
 @client.event
 async def on_message(message):
-    global last_time
     if message.content.find("<porn") == 0:
-        if not message.channel.is_nsfw():
+        if message.guild.id not in serverTime.keys():
+            serverTime[message.guild.id] = 0
+
+        if message.content.find("<porn add") == 0:
+            if len(message.content[10:]) != 0:
+                infos["subreddits"].append(message.content[10:])
+                saveJson()
+                await message.add_reaction("✅")
+            else:
+                await message.add_reaction("❌")
+        elif message.content.find("<porn remove") == 0:
+            try:
+                infos["subreddits"].remove(message.content[13:])
+                saveJson()
+                await message.add_reaction("✅")
+            except ValueError:
+                await message.add_reaction("❌")
+        if message.content.find("<porn ban") == 0:
+            if len(message.content[10:]) != 0:
+                infos["banlist"].append(message.content[10:])
+                saveJson()
+                await message.add_reaction("✅")
+            else:
+                await message.add_reaction("❌")
+        elif message.content.find("<porn unban") == 0:
+            try:
+                infos["banlist"].remove(message.content[12:])
+                saveJson()
+                await message.add_reaction("✅")
+            except ValueError:
+                await message.add_reaction("❌")  
+
+        elif not message.channel.is_nsfw():
             await message.channel.send("You must be in a nsfw channel to use this command")
-        elif time()-last_time >= 5:
-            await message.channel.send(postPorn())
-            last_time = time()
+        elif time()-serverTime[message.guild.id] >= 5:
+            post = postPorn()
+            embed=discord.Embed(title=post[0],url=post[3], color=0xe32400)
+            embed.add_field(name="r/"+post[1], value="\u200b", inline=True)
+            embed.set_image(url=post[2])
+            await message.channel.send(embed=embed)
+            #await message.channel.send(postPorn())
+            serverTime[message.guild.id] = time()
         else:
-            await message.channel.send("Calm down dude, wait {}s to ask for another post".format(5-time()-last_time))
+            await message.channel.send("Calm down dude, wait {}s to ask for another post".format(int(5-(time()-serverTime[message.guild.id]))))
 
 
 @client.event
