@@ -12,12 +12,12 @@ from discord_webhook import DiscordWebhook
 #"""devoirs"""
 webhookLink = "https://discord.com/api/webhooks/838747699448512552/8Nl27cQCctRSbCRcHPpprJv7pr8ZYYpPqLrLTNAbQfu8kAiny3f_vrHztuuH_SN-98y2"
 
+timer = 1800
 done = False
 infos = {}
 with open("infosPorn.json", "r") as f:
     infos = json.load(f)
-
-print(infos["subreddits"])
+#print(infos["subreddits"])
 
 reddit = praw.Reddit(
     client_id = infos["client_id"],
@@ -39,9 +39,9 @@ while 1:
         tempSubreddit = choice(subreddits)
         post = tempSubreddit.random()
         if post == None:
-            print("erreur aucun post trouvé")
+            print("erreur aucun post trouvé dans "+tempSubreddit.title)
             done = False
-        elif "redgif.com" in post.url:
+        elif "redgifs.com" in post.url:
             print("redgif de merde fais chier")
             done = False
         elif post.is_original_content or not post.stickied:
@@ -50,9 +50,10 @@ while 1:
             print(post.url)
             webhook = DiscordWebhook(webhookLink, content = post.title+" from "+tempSubreddit.title+"\n"+post.url+" \nlink :<"+post.shortlink+">")
             webhook.execute()
+            print()
             done = True
         else:
             print("pas original")
             done = False
-    sleep(10)
+    sleep(timer)
     done = False
