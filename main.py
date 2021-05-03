@@ -5,12 +5,19 @@ from praw.reddit import Subreddit
 from time import sleep
 from prawcore import requestor
 import requests
+from discord_webhook import DiscordWebhook
+
+#bot
+#webhookLink = "https://discord.com/api/webhooks/838743675093385257/V1JDQLZMPH966g3mmBmlqHfJraSAjmsw0xZ6OWLnG7DPyPUs4FHHlrU7EL1L2wekeLid"
+#"""devoirs"""
+webhookLink = "https://discord.com/api/webhooks/838747699448512552/8Nl27cQCctRSbCRcHPpprJv7pr8ZYYpPqLrLTNAbQfu8kAiny3f_vrHztuuH_SN-98y2"
 
 done = False
 infos = {}
-with open("infos.json", "r") as f:
+with open("infosPorn.json", "r") as f:
     infos = json.load(f)
 
+print(infos["subreddits"])
 
 reddit = praw.Reddit(
     client_id = infos["client_id"],
@@ -21,29 +28,31 @@ reddit = praw.Reddit(
 )
 reddit.read_only = True
 
-#print(reddit.user.me())
 
 subreddits = []
-for subreddit in infos["subreddits"]:
-    subreddits.append(reddit.subreddit(subreddit))
+for subreddit1 in infos["subreddits"]:
+    subreddits.append(reddit.subreddit(subreddit1))
 
 
-
-
-while not done:
-    tempSubreddit = choice(subreddits)
-    #tempSubreddit.get_top_from_day(limit=1)
-    post = tempSubreddit.random()
-    if post.is_original_content or not post.stickied:
-        print(post.title)
-        print(post.shortlink)
-        print(post.url)
-        #resp = requests.get(url=post.url)
-        #print(resp.json['data']['children'][0]['data']['url'])
-        done = True
-    else:
-        print("pas original")
-        done = False
-sleep(3600)
-done = False
-
+while 1:
+    while not done:
+        tempSubreddit = choice(subreddits)
+        post = tempSubreddit.random()
+        if post == None:
+            print("erreur aucun post trouvé")
+            done = False
+        elif "redgif.com" in post.url:
+            print("redgif de merde fais chier")
+            done = False
+        elif post.is_original_content or not post.stickied:
+            print(post.title)
+            print(post.shortlink)
+            print(post.url)
+            webhook = DiscordWebhook(webhookLink, content = post.title+" from "+tempSubreddit.title+"\n"+post.url+" \nlink :<"+post.shortlink+">")
+            webhook.execute()
+            done = True
+        else:
+            print("pas original")
+            done = False
+    sleep(10)
+    done = False
