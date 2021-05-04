@@ -7,6 +7,7 @@ from discord.ext import tasks, commands
 #from discord_webhook import DiscordWebhook
 
 
+historique = []
 fileJson = "infosPorn.json"
 infos = {}
 serverTime = {}
@@ -38,7 +39,7 @@ for subreddit1 in infos["subreddits"]:
 
 #-------------- FUNCTIONS --------------
 
-def postPorn():
+def postImg():
     done = False
     while not done:
         tempSubreddit = choice(subreddits)
@@ -105,16 +106,28 @@ async def on_message(message):
         elif not message.channel.is_nsfw() and isNSFW:
             await message.channel.send("You must be in a nsfw channel to use this command")
         elif time()-serverTime[message.guild.id] >= 5:
-            post = postPorn()
+            post = postImg()
+            if len(historique) >= 5:
+                historique.pop(0)
+            historique.append(post)
             embed=discord.Embed(title=post[0],url=post[3], color=0xe32400)
             embed.add_field(name="r/"+post[1], value="\u200b", inline=True)
             embed.set_image(url=post[2])
             await message.channel.send(embed=embed)
-            #await message.channel.send(postPorn())
+            #await message.channel.send(postImg())
             serverTime[message.guild.id] = time()
         else:
             await message.channel.send("Calm down dude, wait {}s to ask for another post".format(int(5-(time()-serverTime[message.guild.id]))))
 
+
+@client.event
+async def on_reaction_add(reaction, user):
+    global historique
+    if reaction.message.author.id == client.user.id and reaction.emoji == "❓":
+        print(historique)
+        historique2 = [x[0]+" r/"+x[1]+" <"+x[2]+"> <"+x[3]+">" for x in historique]
+        await reaction.message.channel.send("\n".join(historique2))
+        await reaction.message.remove_reaction(reaction, user)
 
 @client.event
 async def on_ready():
