@@ -73,30 +73,30 @@ async def on_message(message):
         if message.guild.id not in serverTime.keys():
             serverTime[message.guild.id] = 0
 
-        if message.content.find(prefix+"add") == 0:
+        if message.content.find(prefix+" add") == 0:
             if len(message.content[10:]) != 0:
-                infos["subreddits"].append(message.content[len(prefix)+4:])
+                infos["subreddits"].append(message.content[len(prefix)+5:])
                 saveJson()
                 await message.add_reaction("✅")
             else:
                 await message.add_reaction("❌")
-        elif message.content.find(prefix+"remove") == 0:
+        elif message.content.find(prefix+" remove") == 0:
             try:
-                infos["subreddits"].remove(message.content[len(prefix)+7:])
+                infos["subreddits"].remove(message.content[len(prefix)+8:])
                 saveJson()
                 await message.add_reaction("✅")
             except ValueError:
                 await message.add_reaction("❌")
-        if message.content.find(prefix+"ban") == 0:
+        if message.content.find(prefix+" ban") == 0:
             if len(message.content[10:]) != 0:
-                infos["banlist"].append(message.content[len(prefix)+4:])
+                infos["banlist"].append(message.content[len(prefix)+5:])
                 saveJson()
                 await message.add_reaction("✅")
             else:
                 await message.add_reaction("❌")
-        elif message.content.find(prefix+"unban") == 0:
+        elif message.content.find(prefix+" unban") == 0:
             try:
-                infos["banlist"].remove(message.content[len(prefix)+6:])
+                infos["banlist"].remove(message.content[len(prefix)+7:])
                 saveJson()
                 await message.add_reaction("✅")
             except ValueError:
