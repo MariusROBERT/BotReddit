@@ -6,14 +6,14 @@ import discord
 from discord.ext import tasks, commands
 #from discord_webhook import DiscordWebhook
 
-isNSFW = True
-prefix = "<porn"
 
 fileJson = "infosPorn.json"
 infos = {}
 serverTime = {}
 with open(fileJson, "r") as f:
     infos = json.load(f)
+isNSFW = infos["isNSFW"]
+prefix = infos["prefix"]
 
 
 #-------------- CLIENTS ---------------
