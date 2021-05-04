@@ -87,7 +87,7 @@ async def on_message(message):
                 await message.add_reaction("✅")
             except ValueError:
                 await message.add_reaction("❌")
-        if message.content.find(prefix+" ban") == 0:
+        elif message.content.find(prefix+" ban") == 0:
             if len(message.content[10:]) != 0:
                 infos["banlist"].append(message.content[len(prefix)+5:])
                 saveJson()
