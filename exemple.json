@@ -6,5 +6,7 @@
     "username":"",
     "subreddits":["memes"],
     "banlist": ["redgifs.com", "imgur.com", "abload.de"],
-    "token":"discordtoken"
+    "token":"discordtoken",
+    "isNSFW": false,
+    "prefix": "!prefix "
 }
